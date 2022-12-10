@@ -1,3 +1,5 @@
+require "pry"
+
 SAMPLE = <<~SAMPLE
 noop
 addx 3
@@ -7,12 +9,13 @@ SAMPLE
 class Processor
   MARKERS = [20, 60, 100, 140, 180, 220].freeze
 
-  attr_accessor :xreg, :cycle, :signal, :instructions
+  attr_accessor :xreg, :cycle, :signal, :instructions, :screen
 
   def initialize(input)
     @xreg = 1
     @cycle = 1
     @signal = 0
+    @screen = []
     @instructions = input.lines(chomp: true)
   end
 
@@ -32,22 +35,31 @@ class Processor
   end
 
   def tick
+    update_screen!
     update_signal!
     update_cycle!
   end
 
   private
 
-  def update_register!(amount)
-    @xreg += amount
+  def update_screen!
+    if ((@xreg - 1)..(@xreg + 1)).include?(@cycle - 1)
+      @screen << '#'
+    else
+      @screen << '.'
+    end
+  end
+
+  def update_signal!
+    @signal += (@xreg * @cycle) if MARKERS.include?(@cycle)
   end
 
   def update_cycle!
     @cycle += 1
   end
 
-  def update_signal!
-    @signal += (@xreg * @cycle) if MARKERS.include?(@cycle)
+  def update_register!(amount)
+    @xreg += amount
   end
 end
 
@@ -59,3 +71,7 @@ processor = Processor.new(File.read('input.in'))
 processor.run
 
 puts "Part 1: #{processor.signal}"
+
+processor.screen.each_slice(40) { |s| puts s.join('') }
+
+binding.pry
