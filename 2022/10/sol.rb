@@ -4,53 +4,58 @@ addx 3
 addx -5
 SAMPLE
 
-# input = SAMPLE
-input = File.read('sample.in')
-# input = File.read('input.in')
+class Processor
+  MARKERS = [20, 60, 100, 140, 180, 220].freeze
 
-targets = [20, 60, 100, 140, 180, 220]
+  attr_accessor :xreg, :cycle, :signal, :instructions
 
-x_register = 1
-cycle = 1
-signal = 0
-
-screen_writes = []
-
-input.lines(chomp: true).each do |line|
-  if line == "noop"
-    signal += (x_register * cycle) if targets.include?(cycle)
-
-    if x_register - 1 == cycle
-      screen_writes << x_register - 1
-    elsif x_register == cycle
-      screen_writes << x_register
-    elsif x_register + 1 == cycle
-      screen_writes << x_register + 1
-    end
-
-    cycle += 1
-    next
+  def initialize(input)
+    @xreg = 1
+    @cycle = 1
+    @signal = 0
+    @instructions = input.lines(chomp: true)
   end
 
-  amount = line.split(' ', 2).last.to_i
+  def run
+    @instructions.each do |instruction|
+      if instruction == "noop"
+        tick()
+      elsif instruction.start_with?("addx")
+        amount = instruction.split(' ', 2).last
 
-  2.times do
-    signal += (x_register * cycle) if targets.include?(cycle)
+        tick()
+        tick()
 
-    if x_register - 1 == cycle
-      screen_writes << x_register - 1
-    elsif x_register == cycle
-      screen_writes << x_register
-    elsif x_register + 1 == cycle
-      screen_writes << x_register + 1
+        update_register!(amount.to_i)
+      end
     end
-
-    cycle += 1
   end
 
-  x_register += amount
+  def tick
+    update_signal!
+    update_cycle!
+  end
+
+  private
+
+  def update_register!(amount)
+    @xreg += amount
+  end
+
+  def update_cycle!
+    @cycle += 1
+  end
+
+  def update_signal!
+    @signal += (@xreg * @cycle) if MARKERS.include?(@cycle)
+  end
 end
 
-puts "Part 1: #{signal}"
+# input = SAMPLE
+# input = File.read('sample.in')
+# input = File.read('input.in')
 
-puts screen_writes.inspect
+processor = Processor.new(File.read('input.in'))
+processor.run
+
+puts "Part 1: #{processor.signal}"
