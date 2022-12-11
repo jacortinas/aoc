@@ -15,6 +15,7 @@ class Processor
     @xreg = 1
     @cycle = 1
     @signal = 0
+    @screen_position = 0
     @screen = []
     @instructions = input.lines(chomp: true)
   end
@@ -43,10 +44,16 @@ class Processor
   private
 
   def update_screen!
-    if ((@xreg - 1)..(@xreg + 1)).include?(@cycle - 1)
+    if ((@xreg - 1)..(@xreg + 1)).include?(@screen_position)
       @screen << '#'
     else
       @screen << '.'
+    end
+
+    if (@screen.size % 40).zero?
+      @screen_position = 0
+    else
+      @screen_position += 1
     end
   end
 
@@ -63,15 +70,11 @@ class Processor
   end
 end
 
-# input = SAMPLE
-# input = File.read('sample.in')
-# input = File.read('input.in')
-
 processor = Processor.new(File.read('input.in'))
 processor.run
 
 puts "Part 1: #{processor.signal}"
 
-processor.screen.each_slice(40) { |s| puts s.join('') }
+puts "Part 2:"
 
-binding.pry
+processor.screen.each_slice(40) { |s| puts s.join('') }
